@@ -1,19 +1,15 @@
-import 'package:banner_carousel/banner_carousel.dart';
-import 'package:bottom_bar_matu/bottom_bar/bottom_bar_bubble.dart';
-import 'package:bottom_bar_matu/bottom_bar_double_bullet/bottom_bar_double_bullet.dart';
+
 import 'package:bottom_bar_matu/bottom_bar_item.dart';
 import 'package:bottom_bar_matu/bottom_bar_label_slide/bottom_bar_label_slide.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pizza_app/components/Button.dart';
 import 'package:pizza_app/components/firebasepaths.dart';
 import 'package:pizza_app/screens/HomeScreen/confirmation_Screen.dart';
-import 'package:pizza_app/screens/adddress/add_address_Screen.dart';
 import 'package:pizza_app/screens/create_acc/login_screen.dart';
 import 'package:pizza_app/screens/trackorder/track_order.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,10 +17,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../adddress/addressScreen.dart';
 import '../cart/cart.dart';
 import '../favourite/favorite.dart';
+import '../setting/SettingScreen.dart';
 
 class HomeScreen extends StatefulWidget {
 
-  const HomeScreen({Key? key});
+  const HomeScreen({super.key,});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -32,24 +29,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final int bottomBarIndex = 0;
-  Set<String> favoriteProductIds = Set<String>();
    bool  isfavorite = false;
 
-  List pizaaimage = [
-    'assets/images/burger-icon.png',
-    'assets/images/pizza-icon7.png',
-    'assets/images/burger-icon.png',
-    'assets/images/french-fries-icon.png',
-    'assets/images/pizza-icon7.png',
-  ];
-  final List<String> imagePaths = [
-    'assets/images/Pizza-Banner.jpeg',
-    'assets/images/Pizza-Banner.jpeg',
-    'assets/images/Pizza-Banner.jpeg',
-  ];
+
+
   var selectBrandColor;
   late Map<String, String> userData = {};
+  String userName = '';
+  String userEmail = '';
+  String userPhone = '';
+  String userImage = '';
+  String userType = '';
   var categoryType = 'all';
+  TextEditingController phoneController = TextEditingController();
 
   @override
   void initState() {
@@ -66,16 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: Builder(builder: (BuildContext context){
-          return GestureDetector(
-            onTap: (){Scaffold.of(context).openDrawer();},
-            child: Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.amber,
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: (){
+                Scaffold.of(context).openDrawer();},
+              child: Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.amber,
+                ),
+                child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(userImage.toString()))
+                //Image.asset('assets/images/person.png'),
               ),
-              child: Image.asset('assets/images/person.png'),
             ),
           );
         }),
@@ -85,26 +84,31 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Text('Welcome!'),
             const SizedBox(height: 4),
-            Text(
-                userData['name'] != null
-                    ? userData['name']!.toUpperCase()
-                    : 'Default',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('$userName'.toString().toUpperCase(),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black,
+              ),
+            ),
           ],
         ),
+        centerTitle: false,
         actions: [
-          GestureDetector(
-            onTap:  (){
-            },
-            child: Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.white,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap:  (){
+              },
+              child: Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
+                child: const Icon(Icons.notifications, color: Colors.black),
               ),
-              child: const Icon(Icons.notifications, color: Colors.black),
             ),
           ),
 
@@ -133,71 +137,148 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.amber,
                       ),
-                      child: Image.asset('assets/images/person.png'),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(userImage.toString())),
+                      //Image.asset('assets/images/person.png'),
                     ),
                     const SizedBox(
                       width: 10,
                     ),
-                    Text(
-                        userData['email'] != null
-                            ? userData['email']!
-                            : 'Default' ,
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+                    Expanded(
+                      child: Text(userName.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white
+                      ),
+                      ),
+                    ),
                   ],
                 )),
             ListTile(
               leading: const Icon(Icons.person,
                   color: Colors.white, size: 18),
-              title: Text(userData['name']?.toUpperCase() != null
-                  ? userData['name']!
-                  : 'Default',
-                  style: const TextStyle(
-                      color: Colors.white,)),
+              title: Text(userName.toString(),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white
+                ),
+              ),
+
               trailing: const Icon(Icons.edit, color: Colors.white),
             ),
             ListTile(
               leading: const Icon(Icons.mail,
                   color: Colors.white, size: 18),
-              title: Text(userData['email'] ?? '',
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(userEmail.toString(),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white
+                ),
+              ),
               trailing: const Icon(Icons.edit, color: Colors.white),
             ),
              ListTile(
               leading: const Icon(Icons.call,
                   color: Colors.white, size: 22),
-              title: Text(
-                userData['phone'] ?? '',
-                style: const TextStyle(color: Colors.white),
+              title: userPhone.toString() == "null" ?
+              const Text("set phone number",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.white
+              ),) :
+              Text(userPhone.toString(),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white
+                ),
               ),
-              trailing: const Icon(Icons.edit, color: Colors.white),
+              trailing: GestureDetector(
+                  onTap: (){
+                    Get.bottomSheet(
+                      Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10.0,vertical: 10.0),
+                              child: Container(
+                                color: Colors.grey[100],
+                                child: TextField(
+                                  controller: phoneController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      hintText: "e.g: 03001234567",
+                                      hintStyle: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide.none,
+                                        gapPadding: 0,
+                                      ),
+                                    )
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 25.0,vertical: 15.0),
+                              child: GlobalButton(onTap: (){
+                                setPhoneNumber();
+                              }, text: 'Update Phone Number', color: Colors.black),
+                            ),
+
+                          ],
+                        ),
+                      ));
+                  },
+                  child: const Icon(Icons.edit, color: Colors.white)),
             ),
              ListTile(
-              onTap: (){Get.to(AddressScreen());},
+              onTap: (){Get.to(const AddressScreen());},
+              leading: const Icon(
+                  Icons.settings, color: Colors.white, size: 22),
+              title: const Text('Addresses',
+                  style: TextStyle(color: Colors.white,fontSize: 14)),
+            ),
+             ListTile(
+              onTap: (){Get.to(const SettingScreen());},
               leading: const Icon(Icons.settings,
                   color: Colors.white, size: 22),
-              title: const Text('Addresses',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('Setting',
+                  style: TextStyle(color: Colors.white,fontSize: 14)),
             ),
-            const ListTile(
-              leading: Icon(Icons.settings,
-                  color: Colors.white, size: 22),
-              title: Text('Setting',
-                  style: TextStyle(color: Colors.white)),
-            ),
-            SizedBox(height: size.height * 0.26),
+            const Divider(),
+            SizedBox(height: size.height * 0.012),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 5.0,),
               child: GlobalButton(
                   onTap: () async {
+                    await GoogleSignIn().signOut();
                     await FirebaseAuth.instance.signOut().whenComplete(() {
                       Get.to(const LoginScreen());
+                      clearPrefsData();
                     });
+
                   },
                   text: 'Log Out',
-                  color: Colors.black),
+                  color: Colors.grey),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 5.0),
+              child: GlobalButton(
+                  onTap: ()  {
+                    deleteUser();
+                      Get.to(const LoginScreen());
+                  },
+                  text: 'Delete Account',
+                  color: Colors.grey),
             ),
           ],
         ),
@@ -208,49 +289,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ListTile(
-              //   onTap: (){},
-              //   leading: Builder(builder: (BuildContext context){
-              //     return GestureDetector(
-              //       child: Container(
-              //         height: 50,
-              //         width: 50,
-              //         decoration: BoxDecoration(
-              //           borderRadius: BorderRadius.circular(10),
-              //           color: Colors.amber,
-              //         ),
-              //         child: Image.asset('assets/images/person.png'),
-              //       ),
-              //     );
-              //   }),
-              //   title: Column(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       const Text('Welcome!'),
-              //       const SizedBox(height: 4),
-              //       Text(
-              //           userData['name'] != null
-              //               ? userData['name']!.toUpperCase()
-              //               : 'Default',
-              //           style: const TextStyle(
-              //               fontWeight: FontWeight.bold, fontSize: 18)),
-              //     ],
-              //   ),
-              //   trailing: GestureDetector(
-              //     onTap:  (){
-              //     },
-              //     child: Container(
-              //       height: 50,
-              //       width: 50,
-              //       decoration: BoxDecoration(
-              //         borderRadius: BorderRadius.circular(10),
-              //         color: Colors.white,
-              //       ),
-              //       child: const Icon(Icons.notifications, color: Colors.black),
-              //     ),
-              //   ),
-              // ),
               SizedBox(height: size.height * 0.03),
               SizedBox(
                 height: 150,
@@ -289,49 +327,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                      selectBrandColor = categoryType.toString();
-                      categoryType = 'All';
-                      });
-                      },
-                    child: Container(
-                      height: size.height * 0.12,
-                      width: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        color: selectBrandColor ==
-                          'All'
-                            ? Colors.black
-                            : Colors.white,
-                      ),
-                      child: Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'assets/images/fast-food.png',
-                              width: 30,
-                              height: 25,
-                            ),
-                            const SizedBox(
-                              height: 5,
-                            ),
-                            Text(
-                                'All',
-                                style: TextStyle(
-                                    color: selectBrandColor ==
-                                        'All'
-                                        ? Colors.white
-                                        : Colors.black)),
-                          ]),
-                    ),
-                  ),
                   SizedBox(
                     height: size.height * 0.12,
-                    width: size.width/1.4,
-                    child: StreamBuilder<QuerySnapshot>(
+                    width: size.width/1.18,
+                    child:
+                    StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection("Categories")
                             .snapshots(),
@@ -503,91 +503,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             );
-
-                            // return Padding(
-                            //   padding: const EdgeInsets.only(bottom: 8.0,top: 10),
-                            //   child: GestureDetector(
-                            //     onTap: () {
-                            //       Get.to(ConfirmationScreen(
-                            //         Pizzaprice:
-                            //         product[FirebasePaths.KEY_PRODUCT_PRICE].toString(),
-                            //         PizzaMainImage: product[FirebasePaths.KEY_PRODUCT_IMAGE],
-                            //         PizzaName: product[FirebasePaths.KEY_PRODUCT_NAME].toString(),
-                            //         PizzaingredientsName: product[FirebasePaths.KEY_PRODUCT_DESC].toString(),
-                            //         id: product[FirebasePaths.KEY_PRODUCT_ID],
-                            //       ));
-                            //     },
-                            //     child: Container(
-                            //       color: Colors.red,
-                            //       height: size.height * 0.32,
-                            //       width: 170,
-                            //       child: Stack(
-                            //           alignment: Alignment.bottomCenter,
-                            //           children: [
-                            //             Container(
-                            //               height: size.height * 0.20,
-                            //               width: size.width * 0.36,
-                            //               decoration: BoxDecoration(
-                            //                   color: Colors.white,
-                            //                   borderRadius:
-                            //                   BorderRadius.circular(8)),
-                            //             ),
-                            //             Positioned(
-                            //                 left: 25,
-                            //                 top: -10,
-                            //                 right: 25,
-                            //                 child: Padding(
-                            //                   padding: const EdgeInsets.symmetric(
-                            //                       horizontal: 12.0,),
-                            //                   child: Container(
-                            //                     color: Colors.red,
-                            //                     child: Image.network(
-                            //                       product[FirebasePaths.KEY_PRODUCT_IMAGE].toString(),
-                            //                       height: 110,
-                            //                       width: 100,
-                            //
-                            //                     ),
-                            //                   ),
-                            //                 )),
-                            //             Positioned(
-                            //                 top: 90,
-                            //                 left: 25,
-                            //                 child: Text(
-                            //                   product[FirebasePaths.KEY_PRODUCT_NAME].toString(),
-                            //                   style: const TextStyle(
-                            //                       overflow: TextOverflow.clip,
-                            //                       fontWeight: FontWeight.bold,
-                            //                       fontSize: 14),
-                            //                 )),
-                            //             Positioned(
-                            //                 top: 112,
-                            //                 left: 25,
-                            //                 child: Text(
-                            //                   product[FirebasePaths.KEY_PRODUCT_DESC].toString(),
-                            //                   style: const TextStyle(
-                            //                       overflow: TextOverflow.clip,
-                            //                       fontSize: 12),
-                            //                 )),
-                            //             Positioned(
-                            //               top: 130,
-                            //               left: 20,
-                            //               right: 15,
-                            //               child: Padding(
-                            //                 padding: const EdgeInsets.symmetric(
-                            //                     horizontal: 10.0),
-                            //                 child: Text(
-                            //                   product[FirebasePaths.KEY_PRODUCT_PRICE]
-                            //                       .toString(),
-                            //                   style: const TextStyle(
-                            //                       fontWeight: FontWeight.bold,
-                            //                       fontSize: 18),
-                            //                 ),
-                            //               ),
-                            //             ),
-                            //           ]),
-                            //     ),
-                            //   ),
-                            // );
                           });
                     }) :
                 StreamBuilder<QuerySnapshot>(
@@ -707,14 +622,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onSelect: (index) {
           switch (index) {
             case 0:
-              Get.to( HomeScreen(
+              Get.to( const HomeScreen(
               ));
               break;
             case 1:
               Get.to(const FavouriteScreen());
               break;
             case 2:
-              Get.to(TrackOrder());
+              Get.to(const TrackOrder());
               break;
               case 3:
             // Navigate to Cart screen
@@ -726,18 +641,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 //getting through shared preferences
-  Future<void> getUserData() async {
+  void getUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String name = prefs.getString('user_name') ?? 'Default';
-    final String email = prefs.getString('user_email') ?? '';
-    final String phone = prefs.getString('user_phone_number') ?? '';
 
-    setState(() {
-      userData = {
-        'name': name.toString(),
-        'email': email.toString(),
-        'phone':phone.toString()};
+    userName = prefs.getString(SharedPref.PREF_NAME)!;
+    userEmail = prefs.getString(SharedPref.PREF_EMAIL)!;
+    userPhone = prefs.getString(SharedPref.PREF_PHONE,)!;
+    userImage = prefs.getString(SharedPref.PREF_IMAGE)!;
+    userType = prefs.getString(SharedPref.PREF_TYPE)!;
+    setState(() {});
+  }
+  void setPhoneNumber() async{
+      String? UID=  FirebaseAuth.instance.currentUser?.uid;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(SharedPref.PREF_PHONE, phoneController.text.toString())
+        .whenComplete(() {
+      FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS)
+          .doc(UID)
+          .update(
+        {
+          'phone': phoneController.text.toString(),
+        }
+      ).whenComplete(() {
+        setState(() {
+          userPhone = prefs.getString( SharedPref.PREF_PHONE,)!;
+        });
+        Get.back();
+      });
+
     });
+  }
+  void deleteUser() async{
+        String? userUid = FirebasePaths.UID;
+        User? user = FirebaseAuth.instance.currentUser;
+    if(user !=null){
+      await FirebaseFirestore.instance.collection("Users")
+          .doc(userUid)
+          .delete().whenComplete(() async {
+        Get.to(const LoginScreen());
+        Get.snackbar("user Deleted", 'Successfully');
+        await user.delete();
+        clearPrefsData();
+      });
+    }
+
+  }
+
+  void clearPrefsData() async{
+    SharedPreferences prefs =  await SharedPreferences.getInstance();
+    prefs.clear();
+
   }
 
 

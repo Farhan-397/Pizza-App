@@ -1,29 +1,45 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:pizza_app/components/firebasepaths.dart';
 import 'package:pizza_app/screens/HomeScreen/Home_Screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../components/Button.dart';
 
 class CardInfo extends StatefulWidget {
-  final price,delivery;
-  const CardInfo({super.key, required this.price, required this.delivery});
+  final String itemPrice,delivery,total;
+   CardInfo({super.key, required this.delivery, required this.itemPrice, required this.total});
 
   @override
   State<CardInfo> createState() => _CardInfoState();
 }
 
 class _CardInfoState extends State<CardInfo> {
+  TextEditingController cardNameController =  TextEditingController();
+  TextEditingController cardNumberController =  TextEditingController();
+  TextEditingController expiryDateController = TextEditingController();
+  TextEditingController securityController =  TextEditingController();
+
   int val = 1;
   bool cardvisibility = false;
-  bool cardvisibility2 = false;
+  bool cardvisibility2 = true;
+  var cardName  = "";
+  var cardNumber = "";
+  var expiryDate = "";
+  var security = "";
+
+  @override
   late Map<String, String> userSpData = {};
+
+  bool isSaveCard = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    getCardDetails();
     getViaSpUserData();
   }
 
@@ -56,10 +72,10 @@ class _CardInfoState extends State<CardInfo> {
                     Transform.scale(
                       scale: 1,
                       child: Radio(
-                        value: 1, groupValue: val, onChanged: (value){
+                        value: 2, groupValue: val, onChanged: (value){
                         setState(() {
                           val = value!;
-                          if(val == 1){
+                          if(val == 2){
                             cardvisibility = true;
                             cardvisibility2 = false;
                           }
@@ -74,10 +90,10 @@ class _CardInfoState extends State<CardInfo> {
                     Transform.scale(
                       scale: 1,
                       child: Radio(
-                        value: 2, groupValue: val, onChanged: (value){
+                        value: 1, groupValue: val, onChanged: (value){
                         setState(() {
                           val = value!;
-                          if(val == 2){
+                          if(val == 1){
                             cardvisibility = false;
                             cardvisibility2 = true;
                           }
@@ -142,9 +158,9 @@ class _CardInfoState extends State<CardInfo> {
                     Container(
                       color: Colors.white,
                       child: TextField(
-                        controller: TextEditingController(),
+                        controller: cardNameController,
                         decoration: const InputDecoration(
-                            hintText: ' Lucky Kross',
+                            hintText: ' Lucky Cross',
                             enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.transparent)),
                             focusedBorder: OutlineInputBorder(
@@ -157,7 +173,7 @@ class _CardInfoState extends State<CardInfo> {
                     Container(
                       color: Colors.white,
                       child: TextField(
-                        controller: TextEditingController(),
+                        controller: cardNumberController,
                         decoration: const InputDecoration(
                             hintText: ' *************',
                             enabledBorder: OutlineInputBorder(
@@ -182,7 +198,7 @@ class _CardInfoState extends State<CardInfo> {
                                 color: Colors.white,
                               ),
                               child: TextField(
-                                controller: TextEditingController(),
+                                controller: expiryDateController,
                                 decoration: const InputDecoration(
                                     hintText: ' 05/25',
                                     enabledBorder: OutlineInputBorder(
@@ -205,7 +221,7 @@ class _CardInfoState extends State<CardInfo> {
                                 color: Colors.white,
                               ),
                               child: TextField(
-                                controller: TextEditingController(),
+                                controller: securityController,
                                 decoration: const InputDecoration(
                                     hintText: ' 176 ',
                                     enabledBorder: OutlineInputBorder(
@@ -216,6 +232,20 @@ class _CardInfoState extends State<CardInfo> {
                             ),
                           ],),
                       ],),
+                      Row(children: [
+                        Text('Remember card: ',style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500)),
+                        Checkbox(
+                            activeColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            value: isSaveCard, onChanged: (bool? value){
+                          setState(() {
+                            isSaveCard = value!;
+                            saveCardDetails();
+                          });
+                        }),
+                      ],)
                   ],),
                 ),
 
@@ -236,7 +266,7 @@ class _CardInfoState extends State<CardInfo> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Item Bill",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                        Text(widget.price.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                        Text(widget.itemPrice.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
                       ],),
                     const SizedBox(height: 15,),
                     const Row(
@@ -264,7 +294,7 @@ class _CardInfoState extends State<CardInfo> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Total",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
-                        Text((int.parse(widget.delivery) + int.parse(widget.price)).toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                        Text(widget.total.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
                       ],),
                     const SizedBox(height: 25,),
                     GlobalButton(onTap: (){
@@ -318,6 +348,37 @@ class _CardInfoState extends State<CardInfo> {
         'street' : street.toString(),
         'sector': sector.toString(),
         'city' : city.toString()};
+    });
+  }
+
+  void saveCardDetails() async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+     prefs.setString('cardName', cardNameController.text);
+     prefs.setString('cardNumber', cardNumberController.text);
+    prefs.setString('expiryDate', expiryDateController.text);
+     prefs.setString('securityCode', securityController.text);
+      prefs.setBool('saveCardDetails', isSaveCard).whenComplete(() {
+
+      FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS)
+          .doc(FirebasePaths.UID)
+          .collection('card_details')
+          .doc(FirebasePaths.autoId)
+          .set({
+        'cardName': cardNameController.text.toString(),
+        'cardNumber': cardNumberController.text.toString(),
+        'expiryDate': expiryDateController.text.toString(),
+      'securityCode': securityController.text.toString(),
+      });
+    });
+  }
+  void getCardDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    cardNameController.text = prefs.getString('cardName') ?? '';
+    cardNumberController.text = prefs.getString('cardNumber') ?? '';
+    expiryDateController.text = prefs.getString('expiryDate') ?? '';
+    isSaveCard = prefs.getBool('saveCardDetails') ?? false;
+    setState(() {
+
     });
   }
 }

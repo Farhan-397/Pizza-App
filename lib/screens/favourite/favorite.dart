@@ -7,6 +7,9 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:pizza_app/components/Empty_cart.dart';
 import 'package:pizza_app/components/firebasepaths.dart';
 
+import '../../components/Button.dart';
+import '../HomeScreen/Home_Screen.dart';
+
 class FavouriteScreen extends StatefulWidget {
   const FavouriteScreen({super.key});
 
@@ -44,11 +47,15 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
          return (snapShots.connectionState == ConnectionState.waiting)?
              const Center(child: CircularProgressIndicator(color: Colors.black),)
              : snapShots.data!.size<=0?
-             const EmptyBag(
+              EmptyBag(
                image: 'assets/images/empty-cart.png',
-               text: "Favourite Empty",
+               text: "No Favourite Saved",
                subtext: "Once You Added, Come back!",
-             )
+               onTap: (){
+                 Get.to(HomeScreen());
+               },
+                buttontext: "Let's Browse some Favourites",
+                           )
              : ListView.builder(
             itemCount: snapShots.data?.docs.length,
             itemBuilder: (context, index) {

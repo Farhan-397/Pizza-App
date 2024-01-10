@@ -21,5 +21,17 @@ class FirebasePaths{
 
 
 
+
   static  String? UID=  FirebaseAuth.instance.currentUser?.uid;
+  static String?  autoId = FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS).doc().id;
+
+}
+
+class SharedPref{
+  static const String PREF_UID = 'uid';
+  static const String PREF_EMAIL = 'email';
+  static const String PREF_NAME = 'name';
+  static const String PREF_IMAGE = 'image';
+  static const String PREF_PHONE = 'phone';
+  static const String PREF_TYPE ='type';
 }

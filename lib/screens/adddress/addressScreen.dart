@@ -6,6 +6,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:pizza_app/components/firebasepaths.dart';
 import 'package:pizza_app/screens/adddress/add_address_Screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../components/Button.dart';
 
@@ -91,11 +92,12 @@ class _AddressScreenState extends State<AddressScreen> {
                                 color: Colors.white,
                               ),),),),
                           onDismissed: (direction) {
+                          clearPref();
                     FirebaseFirestore.instance
                         .collection(FirebasePaths.COLLECTION_USERS)
                         .doc(userUid)
                         .collection(FirebasePaths.COLLECTION_ADDRESS)
-                        .doc(address[FirebasePaths.KEY_ID].toString())
+                        .doc(FirebasePaths.autoId)
                         .delete();
                     Get.snackbar("Address Deleted", 'Successfully');
                     },
@@ -259,4 +261,10 @@ class _AddressScreenState extends State<AddressScreen> {
     });
 
     }
+
+  void clearPref() async {
+    SharedPreferences prefs =  await SharedPreferences.getInstance();
+      prefs.clear();
+
+  }
 }

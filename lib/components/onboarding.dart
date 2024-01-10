@@ -18,10 +18,10 @@ List<Onboarding> onboardingList = [
 
       image: AppAssets.kOnboardingFirst,
       title: 'Order from your favourite store or vendor',
-      description: ''),
+      description: '',),
+      //'Welcome to "Slice of Heaven Pizzeria" – where passion meets flavor! At our cozy pizza haven, we craft culinary delights that will take your taste buds on a journey of pure bliss.'),
   Onboarding(
-      description:
-      '',
+      description: '',
       image: AppAssets.kOnboardingSecond,
       title: ' Choose from a wide range of different meals'),
   Onboarding(

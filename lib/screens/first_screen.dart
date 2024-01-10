@@ -50,7 +50,7 @@ class DoorHubOnboardingScreenState extends State<DoorHubOnboardingScreen> {
               child: PageView.builder(
                 itemCount: onboardingList.length,
                 controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 onPageChanged: (index) {
                   setState(() {
                     _currentPageIndex = index;

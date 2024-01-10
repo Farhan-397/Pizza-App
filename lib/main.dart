@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:pizza_app/screens/HomeScreen/Home_Screen.dart';
+import 'package:pizza_app/screens/create_acc/login_screen.dart';
+import 'package:pizza_app/screens/first_screen.dart';
 import 'package:pizza_app/screens/splash/splash_Screen.dart';
 
 import 'firebase_options.dart';
@@ -37,8 +39,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home:  const HomeScreen(),
-      //SplashScreen(),
+      home:  const SplashScreen(),
+      //LoginScreen(),
       // builder: EasyLoading.init(),
 
     );

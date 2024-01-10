@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:pizza_app/components/Button.dart';
+import 'package:pizza_app/components/firebasepaths.dart';
 import 'package:pizza_app/components/spinLoading.dart';
 import 'package:pizza_app/screens/create_acc/login_screen.dart';
+import 'package:pizza_app/screens/googler_services/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'otp_screen.dart';
 
@@ -110,7 +112,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 20,),
                 GlobalButton(
                   onTap: (){
-                    _saveUserData();
+                   // _saveUserData();
                     crateAcc();},
                   text: 'Send OTP',
                   color: Colors.black,
@@ -159,18 +161,26 @@ class _SignupScreenState extends State<SignupScreen> {
           'email': emailController.text.toString(),
           'password': passwordController.text.toString(),
           'UserUid': credential.toString(),
+          'phone': phoneController.text.toString(),
         }
-    ).whenComplete(() {
+    ).whenComplete(() async{
       EasyLoading.dismiss();
-      Get.snackbar('Your Acc Is Created', "Enjoy");
+      try{
+        await FirebaseAuth.instance.currentUser!.sendEmailVerification();
+      } on FirebaseException catch(e){
+        // final ex = TExceptions.fr
+      }
+      Get.snackbar('Activate your account', "Check your gmail for Link");
       Get.to(const LoginScreen());
     });
 
   }
-  Future<void> _saveUserData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('user_name', nameController.text);
-    prefs.setString('user_email', emailController.text);
-    prefs.setString('user_phone_number', phoneController.text);
-  }
+  // Future<void> _saveUserData() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   prefs.setString(SharedPref.PREF_NAME, nameController.text);
+  //   prefs.setString(SharedPref.PREF_EMAIL, emailController.text);
+  //   prefs.setString(SharedPref.PREF_PHONE, phoneController.text);
+  //   prefs.setString(SharedPref.PREF_IMAGE, FirebaseAuth.instance.currentUser!.photoURL.toString());
+  //   prefs.setString(SharedPref.PREF_TYPE, 'custom' );
+  // }
 }

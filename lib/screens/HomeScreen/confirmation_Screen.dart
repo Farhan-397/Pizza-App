@@ -257,7 +257,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                         onTap: (){
                                      cartDataToDatabase();
                                       Get.to(InformationScreen(
-                                        price: widget.Pizzaprice.toString(),
+                                        itemPrice: widget.Pizzaprice.toString(),
+                                        delivery: '',
+                                        total: '',
                                       ));
                                     }, text: 'Add to cart'
                                         , color: Colors.black),

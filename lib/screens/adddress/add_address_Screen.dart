@@ -158,7 +158,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
               GlobalButton(
                 onTap: (){
-                saveUserAddress();
                 saveViaSpUserAddress();
                 },
                 text: 'Save And Continue', color: Colors.black,)
@@ -171,26 +170,27 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     );
   }
 
-  void saveUserAddress() {
-     String? userUid = FirebaseAuth.instance.currentUser?.uid;
-     var autoId = FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS).doc().id;
-    FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS)
-        .doc(userUid).collection(FirebasePaths.COLLECTION_ADDRESS)
-        .doc(autoId).set({
-      FirebasePaths.KEY_STREET : streetController.text.toString(),
-      FirebasePaths.KEY_SECTOR : sectorController.text.toString(),
-      FirebasePaths.KEY_CITY : cityController.text.toString(),
-      FirebasePaths.KEY_ID : autoId.toString(),
-    }).whenComplete(() {
-      EasyLoading.dismiss();
-      Get.snackbar('Your Address Is Added', "Enjoy");
-      Get.to(const AddressScreen());
-    });
-  }
-  Future<void> saveViaSpUserAddress() async {
+
+  void saveViaSpUserAddress() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('street', streetController.text.toString());
-    prefs.setString('sector', sectorController.text.toString());
-    prefs.setString('city', cityController.text.toString());
+    prefs.setString(FirebasePaths.KEY_STREET, streetController.text.toString());
+    prefs.setString(FirebasePaths.KEY_SECTOR, sectorController.text.toString());
+    prefs.setString(SharedPref.PREF_UID, FirebaseAuth.instance.currentUser!.uid);
+    prefs.setString(FirebasePaths.KEY_CITY, cityController.text.toString()).whenComplete(() {
+      FirebaseFirestore.instance.collection(FirebasePaths.COLLECTION_USERS)
+          .doc(FirebasePaths.UID).
+      collection(FirebasePaths.COLLECTION_ADDRESS)
+      .doc(FirebasePaths.autoId)
+          .set({
+       'city': cityController.text.toString(),
+       'sector': sectorController.text.toString(),
+       'street': streetController.text.toString(),
+        SharedPref.PREF_UID : FirebaseAuth.instance.currentUser!.uid,
+      }).whenComplete(() {
+        EasyLoading.dismiss();
+        Get.snackbar('Your Address Is Added', "Enjoy");
+        Get.to(const AddressScreen());
+      });
+    });
   }
 }

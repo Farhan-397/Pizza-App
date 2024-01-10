@@ -1,34 +1,40 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:pizza_app/components/Button.dart';
+import 'package:pizza_app/components/firebasepaths.dart';
 import 'package:pizza_app/screens/adddress/add_address_Screen.dart';
 import 'package:pizza_app/screens/cardInfo/card_info.dart';
 import 'package:pizza_app/screens/promocode/promo_code.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InformationScreen extends StatefulWidget {
-  final price;
-  const InformationScreen({super.key, required this.price});
+  final  String itemPrice,delivery,total;
+  const InformationScreen({super.key, required this.itemPrice, required this.delivery, required this.total});
 
   @override
   State<InformationScreen> createState() => _InformationScreenState();
 }
 
 class _InformationScreenState extends State<InformationScreen> {
-  var deliveryCharges = '200';
-  late Map<String, String> userData = {};
-  late Map<String, String> userSpData = {};
+ 
   TextEditingController nameController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController descController = TextEditingController();
+  String userName = '';
+  String userPhone = '';
+  String userStreet = '';
+  String userSector = '';
+  String userCity = '';
+  bool isAddressFound = false;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUserData();
-    getViaSpUserData();
+    addressCheck();
   }
 
   @override
@@ -53,7 +59,7 @@ class _InformationScreenState extends State<InformationScreen> {
                   children: [
                 Container(
                   width: size.width*0.85,
-                  height: size.height*0.18,
+                  // height: size.height*0.18,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(11),
                     color: Colors.white
@@ -70,18 +76,32 @@ class _InformationScreenState extends State<InformationScreen> {
                       )
                     ],),
                     const SizedBox(width: 15,),
-                     Flexible(
+                   isAddressFound ? Flexible(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 9,),
-                          const Text("Shipping Address",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
-                        const SizedBox(height: 9,),
-                        Text(userSpData['street']?? 'Default',style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold)),
-                        Text(userSpData['sector']?? 'Default',style: const TextStyle(fontSize: 16)),
-                        Text(userSpData['city']?? 'Default' ,style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 3,),
+                          Row(children: [
+                            const Text("Shipping Address",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                            IconButton(
+                              icon: const Icon(FontAwesomeIcons.edit),
+                              onPressed: (){
+                                Get.to(AddAddressScreen());
+                              },),
+                          ],),
+                        Text(userStreet.toString(),style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold)),
+                        Text(userSector.toString(),style: const TextStyle(fontSize: 16)),
+                        Text(userCity.toString() ,style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold)),
                       ],),
-                    )
+                    ) : Row(children: [
+                     const Text("Shipping Address",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16)),
+                     IconButton(
+                       icon: const Icon(FontAwesomeIcons.penToSquare),
+                       onPressed: (){
+                         Get.to(const AddAddressScreen());
+                       },),
+                   ],),
                   ],
                     
                   ),
@@ -97,13 +117,9 @@ class _InformationScreenState extends State<InformationScreen> {
                       child:  Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: TextField(
-                          onTap: (){
-                            nameController.text = userData['name']?? 'Default';
-                          },
                           controller: nameController,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
-                            hintText:  'Name',
                             prefixIcon: Icon(Icons.person),
                           ),
                         ),
@@ -118,14 +134,9 @@ class _InformationScreenState extends State<InformationScreen> {
                       child:  Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: TextField(
-                          onTap: (){
-                            phoneController.text =
-                                userData['phone'] ?? 'Default';
-                          },
                           controller: phoneController,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'e.g: 03451234567',
                             prefixIcon: Icon(Icons.call),
                           ),
                         ),
@@ -197,7 +208,7 @@ class _InformationScreenState extends State<InformationScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                     const Text("Item Bill",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                    Text(widget.price.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                    Text(widget.itemPrice.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
                   ],),
                   const SizedBox(height: 15,),
                   const Row(
@@ -212,7 +223,7 @@ class _InformationScreenState extends State<InformationScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Delivery Charges",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                      Text(deliveryCharges.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                      Text(widget.delivery.toString(),style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
                     ],),
                   const SizedBox(height: 15,),
 
@@ -220,18 +231,22 @@ class _InformationScreenState extends State<InformationScreen> {
                     color: Colors.black,
                   ),
                   const SizedBox(height: 15,),
-
                    Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Total",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
-                      Text((int.parse(widget.price) + int.parse(deliveryCharges)).toString() ,style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                      Text(widget.total.toString() ,style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
                     ],),
                   const SizedBox(height: 25,),
-                  GlobalButton(onTap: (){Get.to( CardInfo(
-                    price: widget.price.toString(),
-                    delivery: deliveryCharges.toString(),
-                  ));}, text: 'Check Out', color: Colors.black)
+                  GlobalButton(onTap: (){
+                    Get.to(
+                        CardInfo(
+                          itemPrice: widget.itemPrice.toString(),
+                          delivery: widget.delivery.toString(),
+                          total: widget.total.toString(),
+                  ))
+                  ;},
+                      text: 'Check Out', color: Colors.black)
                 ]),
               ),
             )
@@ -240,29 +255,27 @@ class _InformationScreenState extends State<InformationScreen> {
       ),
     );
   }
-  Future<void> getUserData() async {
+ void getUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String name = prefs.getString('user_name') ?? 'Default';
-    final String phone = prefs.getString('user_phone_number') ?? '';
 
     setState(() {
-      userData = {
-        'name': name.toString(),
-        'phone':phone.toString(),
-        };
+      userName = prefs.getString(SharedPref.PREF_NAME) ?? 'Default';
+      userPhone = prefs.getString(SharedPref.PREF_PHONE) ?? 'No phone Number available';
+      phoneController.text = userPhone.toString() ;
+      nameController.text = userName.toString() ;
+      userStreet = prefs.getString(FirebasePaths.KEY_STREET) ?? 'Default';
+      userSector = prefs.getString(FirebasePaths.KEY_SECTOR) ?? 'Error';
+      userCity = prefs.getString(FirebasePaths.KEY_CITY) ?? 'Error';
     });
-  }
-  Future<void> getViaSpUserData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String street = prefs.getString('street') ?? 'Default';
-    final String sector = prefs.getString('sector') ?? 'Error';
-    final String city = prefs.getString('city') ?? 'Error';
 
-    setState(() {
-      userSpData = {
-        'street' : street.toString(),
-        'sector': sector.toString(),
-        'city' : city.toString()};
-    });
   }
+
+      addressCheck() async{
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        if(prefs.containsKey(FirebasePaths.KEY_STREET)){
+          isAddressFound = true;
+        }else{
+          isAddressFound = false;
+        }
+      }
 }
